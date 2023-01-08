@@ -9,10 +9,6 @@ pub use std::io::prelude::*;
 pub use std::path::PathBuf;
 pub use std::process::Command;
 
-extern crate serde_json;
-extern crate winapi;
-extern crate winreg;
-
 pub use anyhow::{Error, Ok, Result};
 pub use regex::Regex;
 pub use serde::{Deserialize, Serialize};
