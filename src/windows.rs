@@ -1,3 +1,5 @@
+use crate::browser::*;
+use crate::types::*;
 use crate::utils::*;
 use crate::*;
 
@@ -179,7 +181,7 @@ pub fn available_browsers() -> Result<Vec<Browser>> {
     Ok(ret)
 }
 
-fn expand_path(path: &str) -> Result<Vec<String>> {
+pub fn expand_path(path: &str) -> Result<Vec<String>> {
     if path.contains("%programfiles%") {
         // detect binary program files that's same architecture with this binary
         let mut ret: Vec<String> = vec![path.replace("%programfiles%", &env::var("programfiles")?)];
