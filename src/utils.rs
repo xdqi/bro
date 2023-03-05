@@ -12,11 +12,6 @@ pub fn spawn_shell_command(exe: &str, args: &Vec<String>) -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_pointer_width = "32")]
 pub fn is_64() -> bool {
-    return false;
-}
-#[cfg(target_pointer_width = "64")]
-pub fn is_64() -> bool {
-    return true;
+    return cfg!(target_pointer_width = "64");
 }

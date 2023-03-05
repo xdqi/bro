@@ -1,5 +1,5 @@
 #[cfg(windows)]
 pub use crate::windows::*;
 
-#[cfg(not(windows))]
+#[cfg(all(unix, not(target_os = "macos")))]
 pub use crate::unix::*;

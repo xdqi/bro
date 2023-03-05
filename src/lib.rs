@@ -2,7 +2,7 @@ pub mod browser;
 pub mod platform;
 pub mod rule;
 pub mod types;
-#[cfg(not(windows))]
+#[cfg(all(unix, not(target_os = "macos")))]
 pub mod unix;
 pub mod utils;
 #[cfg(windows)]
