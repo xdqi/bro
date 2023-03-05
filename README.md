@@ -1,3 +1,5 @@
+![bro icon](https://cdn-icons-png.flaticon.com/512/744/744480.png)
+
 bro
 ===================
 # Introduction
@@ -17,7 +19,7 @@ A replacement of Browser Chooser 2 in Rust with support for smart browser/profil
 
 Browser choosing rules are defined in order of precedence.
 
-Currently only Windows is supported.
+Supported OS: Windows, Linux
 
 Browsers that supports detection: Chrome, Firefox
 
@@ -25,4 +27,11 @@ Browsers that supports detection: Chrome, Firefox
 
 1. `git clone https://github.com/xdqi/bro`
 
-2. `cargo build --release`
+2. `cargo install --path .`
+
+3. `bro --install`
+
+# Credits
+
+The logo of bro: https://www.flaticon.com/free-icon/globe_744480
+

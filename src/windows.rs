@@ -161,8 +161,7 @@ fn get_browser(key: &RegKey, name: &str) -> Result<Browser> {
         command: subkey.open_subkey("shell\\open\\command")?.get_value("")?,
         profiles: Vec::new(),
     };
-    let profiles = get_profiles(&mut ret)?;
-    ret.profiles = profiles;
+    get_profiles(&mut ret)?;
     Ok(ret)
 }
 
@@ -210,4 +209,13 @@ pub fn is_wow64() -> bool {
         winapi::um::wow64apiset::IsWow64Process(proc_handle, &mut ret);
     }
     ret != 0
+}
+
+pub fn detect_path(browser: &Browser, hint: &ProfileHint) -> Result<String> {
+    for path in expand_path(hint.exe_path)?.iter() {
+        if browser.command.contains(path) {
+            return Ok(path.clone());
+        }
+    }
+    Ok(String::new())
 }

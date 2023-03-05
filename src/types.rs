@@ -34,14 +34,14 @@ pub struct Browser {
     pub profiles: Vec<Profile>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct Config {
     pub detected_browsers: Vec<Browser>,
     pub custom_browsers: Vec<Browser>,
     pub rules: Vec<Rule>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Rule {
     pub matcher: String,
     #[serde(skip_serializing_if = "String::is_empty", default = "String::new")]
@@ -49,11 +49,15 @@ pub struct Rule {
     pub browser: String,
 }
 
+#[derive(Debug)]
 pub enum CompiledMatcher {
     Wildcard(WildMatch),
     Regex(Regex),
 }
+
+#[derive(Debug)]
 pub struct CompiledRule {
+    pub rule: Rule,
     pub matcher: CompiledMatcher,
     pub browser: String,
 }

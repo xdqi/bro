@@ -1,5 +1,6 @@
 use crate::types::*;
 use crate::*;
+use log::trace;
 
 impl Rule {
     pub fn new(matcher: &str, pattern: &str, browser: &str) -> Rule {
@@ -16,10 +17,12 @@ fn compile_rule(rule: &Rule) -> Result<CompiledRule> {
         "WILDCARD" => Ok(CompiledRule {
             matcher: CompiledMatcher::Wildcard(WildMatch::new(&rule.pattern)),
             browser: rule.browser.clone(),
+            rule: rule.clone(),
         }),
         "REGEX" => Ok(CompiledRule {
             matcher: CompiledMatcher::Regex(Regex::new(&rule.pattern)?),
             browser: rule.browser.clone(),
+            rule: rule.clone(),
         }),
         "DOMAIN-WILDCARD" => Ok(CompiledRule {
             matcher: CompiledMatcher::Wildcard(WildMatch::new(&format!(
@@ -27,6 +30,7 @@ fn compile_rule(rule: &Rule) -> Result<CompiledRule> {
                 rule.pattern
             ))),
             browser: rule.browser.clone(),
+            rule: rule.clone(),
         }),
         "DOMAIN" => Ok(CompiledRule {
             matcher: CompiledMatcher::Regex(Regex::new(&format!(
@@ -34,6 +38,7 @@ fn compile_rule(rule: &Rule) -> Result<CompiledRule> {
                 rule.pattern.replace(".", r"\.")
             ))?),
             browser: rule.browser.clone(),
+            rule: rule.clone(),
         }),
         "DOMAIN-SUFFIX" => Ok(CompiledRule {
             matcher: CompiledMatcher::Regex(Regex::new(&format!(
@@ -41,10 +46,12 @@ fn compile_rule(rule: &Rule) -> Result<CompiledRule> {
                 rule.pattern.replace(".", r"\.")
             ))?),
             browser: rule.browser.clone(),
+            rule: rule.clone(),
         }),
         "FINAL" => Ok(CompiledRule {
             matcher: CompiledMatcher::Wildcard(WildMatch::new("*")),
             browser: rule.browser.clone(),
+            rule: rule.clone(),
         }),
         other => return Err(Error::msg(format!("Unknown rule type {}", other))),
     }
@@ -63,15 +70,18 @@ pub fn match_rules(rules: &Vec<CompiledRule>, uri: &str) -> Result<String> {
         match &rule.matcher {
             CompiledMatcher::Wildcard(w) => {
                 if w.matches(uri) {
+                    trace!("{} Matched regex rule {:?}", uri, rule.rule);
                     return Ok(rule.browser.clone());
                 }
             }
             CompiledMatcher::Regex(r) => {
                 if r.is_match(uri) {
+                    trace!("{} Matched wildcard rule {:?}", uri, rule.rule);
                     return Ok(rule.browser.clone());
                 }
             }
         }
     }
+    trace!("{} fallbacked to default rule", uri);
     Ok(String::new()) // fallback to default rule
 }

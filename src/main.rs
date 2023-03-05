@@ -13,7 +13,7 @@ struct Config {
 }
 
 fn open_uri(uri: &str) -> Result<()> {
-    let contents = fs::read_to_string(get_config_path()?)?;
+    let contents = fs::read_to_string(get_config_path()?).expect("Config not found");
     let mut config: Config = serde_json::from_str(&contents)?;
     if config.detected_browsers.is_empty() || config.rules.is_empty() {
         return Err(Error::msg(format!("Invalid config file")));
@@ -47,7 +47,13 @@ fn write_example_config() -> Result<()> {
     Ok(())
 }
 
-const FORMAT_SPEC: &str = r#"
+const FORMAT_SPEC: &str = r#"Usage:
+
+bro              Show this help message
+bro --register   Register as default browser
+bro --unregister Unregister as default browser
+bro <url>        Open URL in your desired browser
+
 bro.json specification:
 
 detected_browsers section contains all browser that Bro has detected, this section must not be changed, otherwise all changes will be lost after new launch of Bro settings.
@@ -70,6 +76,7 @@ browser syntax: <browser.id>:<profile.id> (specifying profile) or <browser.id> (
 "#;
 
 fn main() {
+    env_logger::init();
     // current_default_browser().unwrap();
     // set_default_browser().unwrap();
 
@@ -84,7 +91,14 @@ fn main() {
     // }
     let argv: Vec<String> = env::args().collect();
     if argv.len() == 2 {
-        open_uri(&argv[1]).unwrap();
+        if argv[1] == "--register" {
+            register().unwrap();
+            set_default_browser().unwrap();
+        } else if argv[1] == "--unregister" {
+            unregister().unwrap();
+        } else {
+            open_uri(&argv[1]).unwrap();
+        }
     } else {
         let config_name = get_config_path().unwrap();
         if !fs::metadata(&config_name).is_ok() {

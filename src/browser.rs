@@ -26,8 +26,15 @@ fn construct_firefox_profile_arguments(hint: &ProfileHint, name: &str) -> Vec<St
 
 const PROFILE_HINTS: &'static [ProfileHint] = &[
     ProfileHint {
+        #[cfg(windows)]
         exe_path: "%programfiles%\\Google\\Chrome\\Application\\chrome.exe",
+        #[cfg(windows)]
         profiles_path: "%localappdata%\\Google\\Chrome\\User Data",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        exe_path: "google-chrome.desktop",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        profiles_path: "~/.config/google-chrome",
+
         private_arg: "--incognito",
         private_name: "Incognito mode",
         profile_arg: "--profile-directory=",
@@ -36,8 +43,15 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         detector: check_chrome_profile,
     },
     ProfileHint {
+        #[cfg(windows)]
         exe_path: "%programfiles%\\Google\\Chrome Beta\\Application\\chrome.exe",
+        #[cfg(windows)]
         profiles_path: "%localappdata%\\Google\\Chrome Beta\\User Data",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        exe_path: "google-chrome-beta.desktop",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        profiles_path: "~/.config/google-chrome-beta",
+
         private_arg: "--incognito",
         private_name: "Incognito mode",
         profile_arg: "--profile-directory=",
@@ -46,8 +60,15 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         detector: check_chrome_profile,
     },
     ProfileHint {
+        #[cfg(windows)]
         exe_path: "%programfiles%\\Microsoft\\Edge\\Application\\msedge.exe",
+        #[cfg(windows)]
         profiles_path: "%localappdata%\\Microsoft\\Edge\\User Data",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        exe_path: "microsoft-edge.desktop",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        profiles_path: "~/.config/microsoft-edge",
+
         private_arg: "-inprivate",
         private_name: "InPrivate mode",
         profile_arg: "--profile-directory=",
@@ -56,8 +77,15 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         detector: check_chrome_profile,
     },
     ProfileHint {
+        #[cfg(windows)]
         exe_path: "%programfiles%\\Mozilla Firefox\\firefox.exe",
+        #[cfg(windows)]
         profiles_path: "%appdata%\\Mozilla\\Firefox\\Profiles",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        exe_path: "firefox.desktop",
+        #[cfg(all(unix, not(target_os = "macos")))]
+        profiles_path: "~/.mozilla/firefox",
+
         private_arg: "-private-window",
         private_name: "Private Browsing",
         profile_arg_ctor: construct_firefox_profile_arguments,
@@ -67,21 +95,12 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
     },
 ];
 
-fn detect_path(command: &str, paths: &Vec<String>) -> String {
-    for path in paths {
-        if command.contains(path) {
-            return path.clone();
-        }
-    }
-    return String::new();
-}
-
-pub fn get_profiles(browser: &mut Browser) -> Result<Vec<Profile>> {
+pub fn get_profiles(browser: &mut Browser) -> Result<()> {
     let mut ret: Vec<Profile> = Vec::new();
     for hint in PROFILE_HINTS {
-        let paths = expand_path(hint.exe_path)?;
-        // only detect profile when startup command matches and profile
-        let detected_path = detect_path(&browser.command, &paths);
+        // only detect profile when startup command(Windows), desktop file name(Linux) matches
+        // and profiles directory exists
+        let detected_path = detect_path(&browser, &hint)?;
         if detected_path.is_empty() || hint.profiles_path.is_empty() {
             continue;
         }
@@ -124,9 +143,10 @@ pub fn get_profiles(browser: &mut Browser) -> Result<Vec<Profile>> {
             });
         }
         // println!("{} {:?} {:?} {:?}", browser.command, paths, browser, ret);
-        return Ok(ret);
+        browser.profiles = ret;
+        return Ok(());
     }
-    Ok(ret)
+    Ok(())
 }
 
 pub fn launch_browser_command(

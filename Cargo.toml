@@ -8,9 +8,27 @@ license = "MIT"
 license-file = "LICENSE.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.winres]
+OriginalFilename = "bro.exe"
+ProductName = "bro"
+FileDescription = "bro: Redirects open URLs to a browser of your choice."
+LegalCopyright = "Copyright © 2023 xdqi"
+
+[profile.release]
+strip = true     # Automatically strip symbols from the binary.
+opt-level = "z"  # Optimize for size.
+lto = true       # Enable Link Time Optimization (LTO)
+
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "wow64apiset"] }
 winreg = "0.10"
+
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
+[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+handlr-regex = "0.8"
+mime = "0.3"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -18,3 +36,5 @@ serde_json = "1.0"
 anyhow = { version = "1.0", features = ["backtrace"] }
 wildmatch = "2.1"
 regex = "1.7.0"
+log = "0.4"
+env_logger = "0.10"
