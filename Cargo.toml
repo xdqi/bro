@@ -2,6 +2,10 @@
 name = "bro"
 version = "0.1.0"
 edition = "2021"
+description = "bro: Redirects open URLs to a browser of your choice."
+homepage = "https://github.com/xdqi/bro/"
+license = "MIT"
+license-file = "LICENSE.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [target.'cfg(windows)'.dependencies]
