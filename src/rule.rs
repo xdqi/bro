@@ -1,12 +1,5 @@
+use crate::types::*;
 use crate::*;
-
-#[derive(Serialize, Deserialize)]
-pub struct Rule {
-    matcher: String,
-    #[serde(skip_serializing_if = "String::is_empty", default = "String::new")]
-    pattern: String,
-    browser: String,
-}
 
 impl Rule {
     pub fn new(matcher: &str, pattern: &str, browser: &str) -> Rule {
@@ -16,15 +9,6 @@ impl Rule {
             browser: String::from(browser),
         }
     }
-}
-
-pub enum CompiledMatcher {
-    Wildcard(WildMatch),
-    Regex(Regex),
-}
-pub struct CompiledRule {
-    matcher: CompiledMatcher,
-    browser: String,
 }
 
 fn compile_rule(rule: &Rule) -> Result<CompiledRule> {

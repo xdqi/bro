@@ -1,39 +1,6 @@
-use crate::utils::*;
+use crate::platform::*;
+use crate::types::*;
 use crate::*;
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Profile {
-    id: String,
-    name: String,
-    args: Vec<String>,
-    icon_path: String,
-}
-
-pub struct ProfileHint {
-    exe_path: &'static str,
-    profiles_path: &'static str,
-    private_arg: &'static str,
-    private_name: &'static str,
-    profile_arg: &'static str,
-    profile_arg_ctor: fn(&ProfileHint, &str) -> Vec<String>,
-    icon_path: &'static str,
-    detector: fn(&str, &str) -> Result<bool>,
-}
-
-impl ProfileHint {
-    fn construct_profile_arguments(self: &ProfileHint, name: &str) -> Vec<String> {
-        (self.profile_arg_ctor)(self, name)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Browser {
-    id: String,
-    name: String,
-    command: String,
-    #[serde(skip_serializing_if = "Vec::is_empty", default = "Vec::new")]
-    profiles: Vec<Profile>,
-}
 
 fn check_chrome_profile(profiles_path: &str, profile_name: &str) -> Result<bool> {
     let mut path = PathBuf::from(profiles_path);
@@ -100,28 +67,6 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
     },
 ];
 
-fn expand_path(path: &str) -> Result<Vec<String>> {
-    if path.contains("%programfiles%") {
-        // detect binary program files that's same architecture with this binary
-        let mut ret: Vec<String> = vec![path.replace("%programfiles%", &env::var("programfiles")?)];
-        if is_wow64() {
-            // detect amd64 binary under wow64 environment
-            ret.push(path.replace("%programfiles%", &env::var("programw6432")?));
-        } else if is_64() {
-            // detect i386 binary under amd64 windows
-            ret.push(path.replace("%programfiles%", &env::var("programfiles(x86)")?));
-        }
-        return Ok(ret);
-    } else if path.contains("%appdata%") {
-        return Ok(vec![path.replace("%appdata%", &env::var("appdata")?)]);
-    } else if path.contains("%localappdata%") {
-        return Ok(vec![
-            path.replace("%localappdata%", &env::var("localappdata")?)
-        ]);
-    }
-    Ok(vec![path.to_string()])
-}
-
 fn detect_path(command: &str, paths: &Vec<String>) -> String {
     for path in paths {
         if command.contains(path) {
@@ -181,34 +126,6 @@ pub fn get_profiles(browser: &mut Browser) -> Result<Vec<Profile>> {
         // println!("{} {:?} {:?} {:?}", browser.command, paths, browser, ret);
         return Ok(ret);
     }
-    Ok(ret)
-}
-
-fn get_browser(key: &RegKey, name: &str) -> Result<Browser> {
-    let subkey = key.open_subkey(name)?;
-    let mut ret = Browser {
-        id: String::from(name),
-        name: subkey.get_value("")?,
-        command: subkey.open_subkey("shell\\open\\command")?.get_value("")?,
-        profiles: Vec::new(),
-    };
-    let profiles = get_profiles(&mut ret)?;
-    ret.profiles = profiles;
-    Ok(ret)
-}
-
-pub fn available_browsers() -> Result<Vec<Browser>> {
-    let mut ret: Vec<Browser> = Vec::new();
-    for hkey in [HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE] {
-        let regkey = RegKey::predef(hkey);
-        let browsers = regkey.open_subkey("Software\\Clients\\StartMenuInternet")?;
-        for browser in browsers.enum_keys().map(|x| x.unwrap()) {
-            let browser = get_browser(&browsers, &browser)?;
-            // println!("{:?}", browser);
-            ret.push(browser);
-        }
-    }
-
     Ok(ret)
 }
 

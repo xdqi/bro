@@ -1,5 +1,7 @@
 use bro::browser::*;
+use bro::platform::*;
 use bro::rule::*;
+use bro::types::*;
 use bro::utils::*;
 use bro::*;
 

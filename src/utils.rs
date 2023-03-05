@@ -12,15 +12,6 @@ pub fn spawn_shell_command(exe: &str, args: &Vec<String>) -> Result<()> {
     Ok(())
 }
 
-pub fn is_wow64() -> bool {
-    let mut ret: i32 = 0;
-    unsafe {
-        let proc_handle = winapi::um::processthreadsapi::GetCurrentProcess();
-        winapi::um::wow64apiset::IsWow64Process(proc_handle, &mut ret);
-    }
-    ret != 0
-}
-
 #[cfg(target_pointer_width = "32")]
 pub fn is_64() -> bool {
     return false;
