@@ -27,7 +27,8 @@ fn open_uri(uri: &str) -> Result<()> {
     let cmd = launch_browser_command(&config.detected_browsers, &browser, uri).unwrap();
     println!("{} uses {:?}", uri, cmd);
     spawn_shell_command(&cmd.0, &cmd.1)?;
-
+    // exit after opening uri
+    std::process::exit(0);
     Ok(())
 }
 
@@ -77,7 +78,8 @@ browser syntax: <browser.id>:<profile.id> (specifying profile) or <browser.id> (
 
 fn main() {
     env_logger::init();
-    // current_default_browser().unwrap();
+    // println!("Current default browser: {}", current_default_browser().unwrap());
+    // println!("Detected browsers: {:?}", available_browsers().unwrap());
     // set_default_browser().unwrap();
 
     // write_example_config().unwrap();
@@ -89,7 +91,7 @@ fn main() {
     // for uri in uris.iter() {
     //     open_uri(uri).unwrap();
     // }
-    let argv: Vec<String> = env::args().collect();
+    let mut argv: Vec<String> = env::args().collect();
     if argv.len() == 2 {
         if argv[1] == "--register" {
             register().unwrap();
@@ -100,6 +102,12 @@ fn main() {
             open_uri(&argv[1]).unwrap();
         }
     } else {
+        #[cfg(target_os = "macos")]
+        match macos_init() {
+            Some(uri) => open_uri(&uri).unwrap(),
+            None => ()
+        }
+
         let config_name = get_config_path().unwrap();
         if !fs::metadata(&config_name).is_ok() {
             write_example_config().unwrap();
@@ -108,6 +116,7 @@ fn main() {
                 config_name.to_str().unwrap()
             );
         }
+        println!("Args: {:?}", argv);
         println!("Usage: {} URL", argv[0]);
         println!("{}", FORMAT_SPEC);
     }

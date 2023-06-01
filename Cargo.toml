@@ -5,7 +5,6 @@ edition = "2021"
 description = "bro: Redirects open URLs to a browser of your choice."
 homepage = "https://github.com/xdqi/bro/"
 license = "MIT"
-license-file = "LICENSE.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [package.metadata.winres]
@@ -29,6 +28,12 @@ winres = "0.1"
 [target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
 handlr-regex = "0.8"
 mime = "0.3"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc = "0.2"
+block = "0.1"
+cocoa-foundation = "0.1"
+fruitbasket = "0.10"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

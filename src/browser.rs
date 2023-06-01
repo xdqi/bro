@@ -34,6 +34,10 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         exe_path: "google-chrome.desktop",
         #[cfg(all(unix, not(target_os = "macos")))]
         profiles_path: "~/.config/google-chrome",
+        #[cfg(target_os = "macos")]
+        exe_path: "Google Chrome.app",
+        #[cfg(target_os = "macos")]
+        profiles_path: "~/Library/Application Support/Google/Chrome",
 
         private_arg: "--incognito",
         private_name: "Incognito mode",
@@ -51,6 +55,10 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         exe_path: "google-chrome-beta.desktop",
         #[cfg(all(unix, not(target_os = "macos")))]
         profiles_path: "~/.config/google-chrome-beta",
+        #[cfg(target_os = "macos")]
+        exe_path: "Google Chrome Beta.app",
+        #[cfg(target_os = "macos")]
+        profiles_path: "~/Library/Application Support/Google/Chrome Beta",
 
         private_arg: "--incognito",
         private_name: "Incognito mode",
@@ -68,6 +76,10 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         exe_path: "microsoft-edge.desktop",
         #[cfg(all(unix, not(target_os = "macos")))]
         profiles_path: "~/.config/microsoft-edge",
+        #[cfg(target_os = "macos")]
+        exe_path: "Microsoft Edge.app",
+        #[cfg(target_os = "macos")]
+        profiles_path: "~/Library/Application Support/Microsoft Edge",
 
         private_arg: "-inprivate",
         private_name: "InPrivate mode",
@@ -85,6 +97,10 @@ const PROFILE_HINTS: &'static [ProfileHint] = &[
         exe_path: "firefox.desktop",
         #[cfg(all(unix, not(target_os = "macos")))]
         profiles_path: "~/.mozilla/firefox",
+        #[cfg(target_os = "macos")]
+        exe_path: "Firefox.app",
+        #[cfg(target_os = "macos")]
+        profiles_path: "~/Library/Application Support/Firefox/Profiles",
 
         private_arg: "-private-window",
         private_name: "Private Browsing",
@@ -168,6 +184,18 @@ pub fn launch_browser_command(
         }
         // use browser itself with no profile
         if vec.len() == 1 {
+            #[cfg(target_os = "macos")]
+            return Ok((
+                String::from("open"),
+                vec![
+                    String::from("-n"),      // launch a new instance
+                    String::from("-a"),      // using the application
+                    browser.command.clone(), // application name
+                    String::from("--args"),  // pass arguments
+                    String::from(uri),       // uri
+                ],
+            ));
+            #[cfg(not(target_os = "macos"))]
             return Ok((
                 String::from(browser.command.clone()),
                 vec![String::from(uri)],
@@ -180,10 +208,26 @@ pub fn launch_browser_command(
             }
 
             // construct arguments
-            let mut vec = profile.args.clone();
-            vec.push(String::from(uri));
-            // matched profile
-            return Ok((String::from(browser.command.clone()), vec));
+
+            #[cfg(target_os = "macos")]
+            {
+                let mut vec = vec![
+                    String::from("-n"),
+                    String::from("-a"),
+                    browser.command.clone(),
+                    String::from("--args"),
+                ];
+                vec.extend(profile.args.clone());
+                vec.push(uri.to_string());
+                return Ok((String::from("open"), vec));
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                let mut vec = profile.args.clone();
+                vec.push(String::from(uri));
+                // matched profile
+                return Ok((String::from(browser.command.clone()), vec));
+            }
         }
 
         // when no profile is found

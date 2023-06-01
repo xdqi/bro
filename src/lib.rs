@@ -2,6 +2,11 @@ pub mod browser;
 pub mod platform;
 pub mod rule;
 pub mod types;
+#[cfg(target_os = "macos")]
+pub mod macos;
+#[cfg(target_os = "macos")]
+#[macro_use]
+extern crate objc;
 #[cfg(all(unix, not(target_os = "macos")))]
 pub mod unix;
 pub mod utils;
