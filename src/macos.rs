@@ -17,29 +17,14 @@ static mut FOUND_URL: Option<String> = None;
 
 pub fn macos_init() -> Option<String> {
     let mut app = FruitApp::new();
-    // Register a callback for when the ObjC application finishes launching
-    let stopper = app.stopper();
-    app.register_callback(
-        FruitCallbackKey::Method("applicationWillFinishLaunching:"),
-        Box::new(move |_event| {
-            println!("applicationDidFinishLaunching.");
-            stopper.stop();
-        }),
-    );
 
-    // Run until callback is called
-    println!("Spawned process started.  Run until applicationDidFinishLaunching.");
-    let _ = app.run(RunPeriod::Forever);
-
-    println!("Application launched.  Registering URL callbacks.");
-    // Register a callback to get receive custom URL schemes from any Mac program
+    // Register Apple Event handler BEFORE running the app, so URL events
+    // delivered during applicationDidFinishLaunching: are not lost.
     app.register_apple_event(fruitbasket::kInternetEventClass, fruitbasket::kAEGetURL);
     let stopper = app.stopper();
     app.register_callback(
         FruitCallbackKey::Method("handleEvent:withReplyEvent:"),
         Box::new(move |event| {
-            // Event is a raw NSAppleEventDescriptor.
-            // Fruitbasket has a parser for URLs.  Call that to get the URL:
             let url: String = fruitbasket::parse_url_event(event);
             println!("Received URL: {}", url);
             unsafe {
@@ -49,20 +34,8 @@ pub fn macos_init() -> Option<String> {
         }),
     );
 
-    // let stopper = app.stopper();
-    // app.register_callback(
-    //     FruitCallbackKey::Method("application:openFile:"),
-    //     Box::new(move |file| {
-    //         // File is a raw NSString.
-    //         // Fruitbasket has a converter to Rust String:
-    //         let file: String = fruitbasket::nsstring_to_string(file);
-    //         println!("Received file: {}", file);
-    //         stopper.stop();
-    //     }),
-    // );
-
-    // Run 'forever', until one of the URL or file callbacks fire
-    println!("Spawned process running!");
+    // Run until the URL callback fires
+    println!("Spawned process running, waiting for URL...");
     let _ = app.run(RunPeriod::Forever);
     println!("Run loop stopped after URL callback.");
 
